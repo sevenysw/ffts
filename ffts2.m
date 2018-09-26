@@ -114,8 +114,8 @@ switch(method)
         SpacingX = mean(Xq(2:end)-Xq(1:(end-1)));
         SpacingY = mean(Yq(2:end)-Yq(1:(end-1)));
         % Upsampled version of Xq
-        Xql = linspace(Xq(1),Xq(end)+(SpacingX/2),length(Xq)*2);
-        Yql = linspace(Yq(1),Yq(end)+(SpacingY/2),length(Yq)*2);
+        Xql = linspace(Xq(1),Xq(end)+(SpacingX/2),length(Xq));
+        Yql = linspace(Yq(1),Yq(end)+(SpacingY/2),length(Yq));
           
         % Calculate B-spline interpolation weights
 %         [W, index] =Interpolation_Weights(X,Xql,window);
@@ -125,7 +125,7 @@ switch(method)
         for i=1:size(Wx,1)
             W(i,:) = kron(Wx(i,:),Wy(i,:));
             [xp,yp] = meshgrid(indexx(i,:),indexy(i,:));
-            index(i,:) = sub2ind([length(Yql),length(Xql)],xp(:),yp(:));
+            index(i,:) = sub2ind([length(Xql),length(Yql)],xp(:),yp(:));
         end
         % Construct new 2d index
         % Convolution
@@ -190,7 +190,7 @@ switch(method)
 end
 
 % Trim fourier domain
-Fq = TrimFourier(Fq,length(Xq),length(Yq));
+% Fq = TrimFourier(Fq,length(Xq),length(Yq));
 
 end
 

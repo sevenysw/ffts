@@ -150,23 +150,28 @@ switch(method)
 end
 
 % Go to the fourier domain
-Vq2 = 
-Fq = fftshift(fft(ifftshift(Vq(:))));
+Vq2 = reshape(Vq,[length(Yql),length(Xql)]);
+
+Fq2 = fftshift(fft2(ifftshift(Vq2)));
  
 
 switch(method)
     case 'grid'
         % Make apodization correction function
         if(mod(length(Xql),2)==0)
-             w = linspace(-0.5,0.5,length(Xql)+1);  w=w(1:end-1);
+             wx = linspace(-0.5,0.5,length(Xql)+1);  wx=wx(1:end-1);
+             wy = linspace(-0.5,0.5,length(Yql)+1);  wy=wy(1:end-1);
+             
         else
-             w = linspace(-0.5,0.5,length(Xql));
+             wx = linspace(-0.5,0.5,length(Xql));
+             wy = linspace(-0.5,0.5,length(Yql));
+             
         end
-        
+        [wx,wy] = meshgrid(wx,wy);
         switch(window)
             case 'bspline'
                 % ^4 because we use a cubic spline.
-                Ys = sincc(w*pi).^4 ;
+                Ys = sincc(wx*pi).^4.* sincc(wy*pi).^4.;
             case 'kaiser'
                 cb = 5.7567;
                 cw = 4;
@@ -178,30 +183,32 @@ switch(method)
         end
 
         % Compensate for the b-spline smoothing
-        Fq = Fq(:)./Ys(:);
+        Fq = Fq2./Ys;
     case 'fit'
     otherwise
         error('ffts: Unknown method');
 end
 
 % Trim fourier domain
-Fq = TrimFourier(Fq,length(Xq));
+Fq = TrimFourier(Fq,length(Xq),length(Yq));
 
 end
 
 % This function trims an upsampled fourier transformed signal
 % to go back to the original  (downsampled) fourier domain.
-function F_trimmed = TrimFourier(F,num)
-    if(num == length(F))
+function F_trimmed = TrimFourier(F,num,numy)
+    if(num == size(F,1))
         F_trimmed = F;
     else
-        zf = ceil((length(F)+1)/2);
+        zf = ceil((size(F,1)+1)/2);
         if(floor(num/2)==ceil(num/2))
-            F_trimmed = F(zf + (((-num/2)):((num/2)-1)))* (num/length(F));
+            F_trimmed = F(zf + (((-num/2)):((num/2)-1)),zf + (((-numy/2)):((numy/2)-1)))* (num/size(F,1))*(numy/size(F,2));
         else
-            F_trimmed = F(zf + (((-(num-1)/2)):(((num-1)/2)))) * (num/length(F));
-            ac = -linspace(-pi/2,pi/2,length(F)+1); ac= ac(1:end-1);
-            F_trimmed =F_trimmed.* (1i*sin(ac) + cos(ac));
+            F_trimmed = F(zf + (((-(num-1)/2)):(((num-1)/2))),zf + (((-(numy-1)/2)):(((numy-1)/2)))) * (num/length(F))*(numy/size(F,2));
+            acx = -linspace(-pi/2,pi/2,size(F,1)+1); acx= acx(1:end-1);
+            acy = -linspace(-pi/2,pi/2,size(F,2)+1); acy= acy(1:end-1);
+            [acx,acy] = meshgrid(acx,acy);
+            F_trimmed =F_trimmed.* (1i*sin(acx+acy) + cos(acx+acy));
         end
     end
 end

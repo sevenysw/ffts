@@ -116,9 +116,9 @@ switch(method)
         SpacingY = mean(Yq(2:end)-Yq(1:(end-1)));
         SpacingZ = mean(Zq(2:end)-Zq(1:(end-1)));
         % Upsampled version of Xq
-        Xql = linspace(Xq(1),Xq(end)+(SpacingX/2),length(Xq)*2);
-        Yql = linspace(Yq(1),Yq(end)+(SpacingY/2),length(Yq)*2);
-        Zql = linspace(Zq(1),Zq(end)+(SpacingZ/2),length(Zq)*2);
+        Xql = linspace(Xq(1),Xq(end)+(SpacingX/2),length(Xq));
+        Yql = linspace(Yq(1),Yq(end)+(SpacingY/2),length(Yq));
+        Zql = linspace(Zq(1),Zq(end)+(SpacingZ/2),length(Zq));
         % Calculate B-spline interpolation weights
 %         [W, index] =Interpolation_Weights(X,Xql,window);
         [Wx, indexx] =Interpolation_Weights(X,Xql,window);
@@ -128,7 +128,7 @@ switch(method)
         for i=1:size(Wx,1)
             W(i,:) = kron(kron(Wx(i,:),Wy(i,:)),Wz(i,:));
             [xp,yp,zp] = meshgrid(indexx(i,:),indexy(i,:),indexz(i,:));
-            index(i,:) = sub2ind([length(Zql),length(Yql),length(Xql)],xp(:),yp(:),zp(:));
+            index(i,:) = sub2ind([length(Xql),length(Yql),length(Zql)],xp(:),yp(:),zp(:));
         end
         % Construct new 2d index
         % Convolution
@@ -153,7 +153,7 @@ switch(method)
 end
 
 % Go to the fourier domain
-Vq2 = reshape(Vq,[length(Zql),length(Yql),length(Xql)]);
+Vq2 = reshape(Vq,[length(Xql),length(Yql),length(Zql)]);
 
 Fq2 = fftshift(fftn(ifftshift(Vq2)));
  
@@ -164,13 +164,13 @@ switch(method)
         if(mod(length(Xql),2)==0)
              wx = linspace(-0.5,0.5,length(Xql)+1);  wx=wx(1:end-1);
              wy = linspace(-0.5,0.5,length(Yql)+1);  wy=wy(1:end-1);
-             wz = linspace(-0.5,0.5,length(Yql)+1);  wz=wz(1:end-1);
+             wz = linspace(-0.5,0.5,length(Zql)+1);  wz=wz(1:end-1);
         else
              wx = linspace(-0.5,0.5,length(Xql));
              wy = linspace(-0.5,0.5,length(Yql));
              wz = linspace(-0.5,0.5,length(Zql));
         end
-        [wx,wy,wz] = meshgrid(wx,wy,wz);
+        [wx,wy,wz] = meshgrid(wy,wx,wz);
         switch(window)
             case 'bspline'
                 % ^4 because we use a cubic spline.
